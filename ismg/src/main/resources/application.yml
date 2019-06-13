@@ -1,0 +1,97 @@
+##### 此配置文件主要配置系统级的参数 #####
+server:
+  port: 9000
+  context-path: /ismg
+  
+management:
+  security:
+    enabled: false
+    
+spring:
+  application:
+    name: ismg
+  profiles:
+    active: dev  #不同环境需要修改 dev produce ${{activeType}}
+    
+mybatis:
+  mapperLocations: classpath:/com/test/ismg/modular/**/mapping/*.xml
+  configuration:
+    call-setters-on-nulls: true #当返回结果是map时，如果值为null，map中的key存在
+    
+###################  eureka配置  ###################
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8880/eureka/
+    register-with-eureka: true
+    fetchRegistry: true
+  instance:
+    leaseRenewalIntervalInSeconds: 30
+    preferIpAddress: true
+    instanceId: ${spring.application.name}:${spring.cloud.client.ipAddress}:${server.port}
+    metadataMap:
+      instanceId: ${server.port}
+
+ribbon:
+  ConnectTimeout: 10000 #ribbon请求连接的超时时间
+  ReadTimeout: 10000 #ribbon请求处理的超时时间
+  OkToRetryOnAllOperations: true #ribbon对所有操作请求都进行重试
+  MaxAutoRetries: 0 #ribbon对当前实例的重试次数
+  MaxAutoRetriesNextServer: 1 #ribbon对下个实例的重试次数
+  
+##### 此配置文件主要配置应用级的参数 #####
+sms:
+  isDevMode: false #是否为开发模式，开发模式时，不会真发短信
+  captchaChannellist: ali,ten #短信可用渠道
+  default: 
+    captchaChannel: ali #验证码通道
+    messageChannel: ali #短信通道
+  customerServicePhone: 4001886660 #客服电话
+  ali: #阿里云
+    accessKeyId:
+    accessKeySecret:
+  tencent: #腾讯
+    accessKeyId:
+    accessKeySecret:
+    templateId: 51511
+  lingkai: #凌凯
+    accessKeyId:
+    accessKeySecret: @
+      
+##########################################################
+###################  开发环境的profile  ###################
+##########################################################
+---
+spring:
+  profiles: dev
+  datasource:
+      url: jdbc:mysql://localhost:3306/ismg?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull
+      username:
+      password:
+      driverClassName: com.mysql.jdbc.Driver
+      initialize: false #启动时是否执行data.sql
+      tomcat:
+        initial-size: 1 #初始池大小
+        max-active: 4 #指定连接池中最大的活跃连接数
+        max-idle: 3 #最大的空闲连接数量
+        min-idle: 1 #最小的空闲连接数量
+        default-auto-commit: false
+        
+##########################################################
+###################  开发环境的profile  ###################
+##########################################################
+---
+spring:
+  profiles: produce
+  datasource:
+      url: jdbc:mysql://localhost:3306/ismg?autoReconnect=true&useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull
+      username:
+      password:
+      driverClassName: com.mysql.jdbc.Driver
+      initialize: false #启动时是否执行data.sql
+      tomcat:
+        initial-size: 1 #初始池大小
+        max-active: 4 #指定连接池中最大的活跃连接数
+        max-idle: 3 #最大的空闲连接数量
+        min-idle: 1 #最小的空闲连接数量
+        default-auto-commit: false        

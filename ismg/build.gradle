@@ -1,0 +1,137 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.3.RELEASE'
+	}
+	repositories {
+		maven { url 'http://10.1.2.205:8081/nexus/content/groups/public' }
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'application'
+apply plugin: 'org.springframework.boot'
+	
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+//本项目打包默认版本
+def version='1.0.0-RELEASE'
+def baseName ="ismg"
+def applicationName = baseName
+def archivesBaseName = baseName
+def mainClassName = "IsmgApplication"
+
+//gradle build时，指定jar的入口
+springBoot{ mainClass=mainClassName }
+//编译目录
+buildDir = 'build/gradle'
+
+if(System.getenv().containsKey('BUILD_DISPLAY_NAME'))
+	version=System.getenv()['BUILD_DISPLAY_NAME']
+if(project.hasProperty('build.version')){
+	version=project.ext['build.version']
+}
+
+//maven地址
+repositories { 
+	maven { url 'http://10.1.2.205:8081/nexus/content/groups/public' }
+}
+//bin脚本的启动参数
+def applicationDefaultJvmArgs = ["-Xms32M", "-Xmx1024M", "-DAPP_HOME=TSINGNUO_APP_HOME"]
+//启动脚本
+startScripts {
+	doLast {
+		unixScript.text = unixScript.text.replace('TSINGNUO_APP_HOME', '\$APP_HOME')
+		windowsScript.text = windowsScript.text.replace('TSINGNUO_APP_HOME', '%~dp0..')
+		unixScript.text = unixScript.text.replaceAll('\\nCLASSPATH=.*', java.util.regex.Matcher.quoteReplacement('\nCLASSPATH=\$APP_HOME/conf:\$APP_HOME/lib/*'))
+		windowsScript.text = windowsScript.text.replaceAll('\\nset CLASSPATH=.*', java.util.regex.Matcher.quoteReplacement('\nset CLASSPATH=%APP_HOME%\\conf;%APP_HOME%\\lib\\*'))
+	}
+}
+
+jar{
+	manifest{
+		attributes("Manifest-Version" : version,
+		"Implementation-Title": "Tsingnuo TMS",
+		"Implementation-Vendor": "Tsingnuo Inc.",
+		"Implementation-Version": version
+		)
+	}
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs "src/main/java","src/main/resources","src/main/webapp"
+        }
+    }
+}
+
+configurations{ providedRuntime }
+
+//新加，include中的文件会被复制到conf目录下，部署时需要修改的配置文件需要进行此项设置
+applicationDistribution.into("conf") {
+	 from('src/main/resources'){
+		 include "bootstrap.yml"
+		 include "application.yml"
+		 include "logback.xml"
+	 }
+}
+
+//新加
+task dist {
+	 dependsOn distTar
+}
+//新加
+distTar {
+	archiveName baseName + '-' + version + '.tar'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Camden.SR5'
+	}
+}
+
+dependencies {
+	compile("org.springframework.cloud:spring-cloud-starter-eureka")
+	compile("org.springframework.boot:spring-boot-starter")
+	compile("org.springframework.boot:spring-boot-starter-web")
+	compile("org.springframework.boot:spring-boot-starter-logging")
+	compile("org.springframework.boot:spring-boot-starter-actuator")
+//	compile("org.springframework.cloud:spring-cloud-starter-config")
+	compile("org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final")
+	
+    //mybatis
+    compile("org.mybatis.spring.boot:mybatis-spring-boot-starter:1.3.1")
+    compile("com.github.pagehelper:pagehelper-spring-boot-starter:1.2.3")
+    
+    //mysql jdbc driver
+    compile("mysql:mysql-connector-java")
+    
+	compile("com.google.guava:guava:18.0+")
+	compile("org.roboguice:roboguice:2.0+")
+	compile("com.netflix.servo:servo-core:0.12+")	
+	
+	compile("com.netflix.hystrix:hystrix-javanica:1.5.3")
+
+	compile('io.springfox:springfox-swagger2:2.3.1')
+	compile('io.springfox:springfox-swagger-ui:2.3.1')
+	
+	compile('org.springframework.boot:spring-boot-configuration-processor:1.5.9.RELEASE')
+	
+	//腾讯云
+	compile('com.github.qcloudsms:sms:0.9.1')
+	
+	testCompile("org.springframework.boot:spring-boot-starter-test")
+	
+	compile fileTree(dir:"$projectDir//libs")
+}
+
+//中文字符集设置
+[compileJava, javadoc, compileTestJava]*.options*.encoding = 'UTF-8'

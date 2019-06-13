@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.test.ismg.modular.busi.dao.TypeHandlerDao">
+
+	<sql id="searchColumns">
+		typeHandler.id id,typeHandler.business_type businessType,typeHandler.business_type_desc businessTypeDesc,typeHandler.service_name serviceName,
+		typeHandler.temp_desc tempDesc,typeHandler.version version,typeHandler.temp_version tempVersion,typeHandler.status status,typeHandler.cost cost
+	</sql>
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="id" parameterType="com.test.ismg.modular.busi.entity.TypeHandler">
+		insert into
+		type_handler_rel(business_type_desc,id,temp_version,business_type,service_name,temp_desc,version,status,cost)
+		values (#{businessTypeDesc},#{id},#{tempVersion},#{businessType},#{serviceName},#{tempDesc},#{version},#{status},#{cost})
+	</insert>
+
+	<delete id="delete">
+		delete from type_handler_rel
+		where id = #{id}
+	</delete>
+	
+	<update id="deleteLogic">
+		update type_handler_rel set is_deleted = 1 where id = #{id}
+	</update>
+	
+	<update id="update" parameterType="com.test.ismg.modular.busi.entity.TypeHandler">
+		update type_handler_rel set
+		business_type_desc=#{businessTypeDesc},id=#{id},temp_version=#{tempVersion},business_type=#{businessType},
+		service_name=#{serviceName},temp_desc=#{tempDesc},version=#{version},status=#{status},cost=#{cost} where id = #{id}
+	</update>
+	
+	<update id="updateWithOutNull" parameterType="com.test.ismg.modular.busi.entity.TypeHandler">
+		update type_handler_rel
+		<set>
+            <if test="businessType != null"> business_type=#{businessType},</if>
+            <if test="businessTypeDesc != null"> business_type_desc=#{businessTypeDesc},</if>
+            <if test="serviceName != null"> service_name=#{serviceName},</if>
+            <if test="tempDesc != null"> temp_desc=#{tempDesc},</if>
+            <if test="version != null"> version=#{version},</if>
+            <if test="tempVersion != null"> temp_version=#{tempVersion},</if>
+            <if test="status != null"> status=#{status},</if>
+            <if test="cost != null"> cost=#{cost},</if>
+        </set> 
+		where id = #{id}
+	</update>
+
+	<!-- 查询（根据主键ID查询） -->
+	<select id="selectById" resultType="com.test.ismg.modular.busi.entity.TypeHandler">
+		select
+		<include refid="searchColumns" />
+		from type_handler_rel typeHandler
+		where typeHandler.id = #{id}
+	</select>
+	
+	<!-- 查询所有 -->
+	<select id="listAll" resultType="com.test.ismg.modular.busi.entity.TypeHandler">
+		select
+		<include refid="searchColumns" />
+		from type_handler_rel typeHandler
+	</select>
+	
+	<!-- 根据条件查询 -->
+	<select id="list" parameterType="java.util.Map" resultType="com.test.ismg.modular.busi.entity.TypeHandler">
+		select
+		<include refid="searchColumns" />
+		from type_handler_rel typeHandler
+		where 1=1 
+		<if test="businessType != null"> and business_type = #{businessType} </if>
+		<if test="status != null"> and status = #{status} </if>
+		<if test="version != null"> and version = #{version} </if>
+	</select>
+	
+	<!-- 查询（分页查询） -->
+	<select id="selectPage" parameterType="java.util.Map" resultType="com.test.ismg.modular.busi.entity.TypeHandler">
+		select
+		<include refid="searchColumns" />
+		from type_handler_rel typeHandler
+		where 1=1
+		
+		<if test="orderCondition != null"> order by ${orderCondition} </if>
+	</select>
+</mapper>
+

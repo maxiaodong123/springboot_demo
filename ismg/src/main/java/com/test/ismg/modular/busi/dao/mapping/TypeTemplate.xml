@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.test.ismg.modular.busi.dao.TypeTemplateDao">
+
+	<sql id="searchColumns">
+		typeTemplate.id id,typeTemplate.business_type businessType,typeTemplate.temp_code tempCode,typeTemplate.temp_version tempVersion,typeTemplate.status status,typeTemplate.cost cost
+	</sql>
+
+	<insert id="save" useGeneratedKeys="true" keyProperty="id" parameterType="com.test.ismg.modular.busi.entity.TypeTemplate">
+		insert into
+		type_temp_rel(temp_code,id,temp_version,business_type,status,cost)
+		values (#{tempCode},#{id},#{tempVersion},#{businessType},#{status},#{cost})
+	</insert>
+
+	<delete id="delete">
+		delete from type_temp_rel
+		where id = #{id}
+	</delete>
+	
+	<update id="deleteLogic">
+		update type_temp_rel set is_deleted = 1 where id = #{id}
+	</update>
+	
+	<update id="update" parameterType="com.test.ismg.modular.busi.entity.TypeTemplate">
+		update type_temp_rel set
+		temp_code=#{tempCode},id=#{id},temp_version=#{tempVersion},business_type=#{businessType},status=#{status},cost=#{cost} where id = #{id}
+	</update>
+	
+	<update id="updateWithOutNull" parameterType="com.test.ismg.modular.busi.entity.TypeTemplate">
+		update type_temp_rel
+		<set>
+            <if test="businessType != null"> business_type=#{businessType},</if>
+            <if test="tempCode != null"> temp_code=#{tempCode},</if>
+            <if test="tempVersion != null"> temp_version=#{tempVersion},</if>
+            <if test="status != null"> status=#{status},</if>
+            <if test="cost != null"> cost=#{cost},</if>
+        </set> 
+		where id = #{id}
+	</update>
+
+	<!-- 查询（根据主键ID查询） -->
+	<select id="selectById" resultType="com.test.ismg.modular.busi.entity.TypeTemplate">
+		select
+		<include refid="searchColumns" />
+		from type_temp_rel typeTemplate
+		where typeTemplate.id = #{id}
+	</select>
+	
+	<!-- 查询所有 -->
+	<select id="listAll" resultType="com.test.ismg.modular.busi.entity.TypeTemplate">
+		select
+		<include refid="searchColumns" />
+		from type_temp_rel typeTemplate
+	</select>
+	
+	<!-- 根据条件查询 -->
+	<select id="list" parameterType="java.util.Map" resultType="com.test.ismg.modular.busi.entity.TypeTemplate">
+		select
+		<include refid="searchColumns" />
+		from type_temp_rel typeTemplate
+		where 1=1 
+		<if test="businessType != null"> and business_type = #{businessType} </if>
+		<if test="status != null"> and status = #{status} </if>
+		<if test="tempVersion != null"> and temp_version = #{tempVersion} </if>
+	</select>
+	
+	<!-- 查询（分页查询） -->
+	<select id="selectPage" parameterType="java.util.Map" resultType="com.test.ismg.modular.busi.entity.TypeTemplate">
+		select
+		<include refid="searchColumns" />
+		from type_temp_rel typeTemplate
+		where 1=1
+		
+		<if test="orderCondition != null"> order by ${orderCondition} </if>
+	</select>
+</mapper>
+
